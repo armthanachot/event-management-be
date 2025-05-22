@@ -17,7 +17,9 @@ func Router(r fiber.Router, db *gorm.DB) {
 
 	groupRoute := r.Group("/event")
 	groupRoute.Post("/", handler.Create)
+	groupRoute.Post("/participants", handler.CreateParticipant) // transform #1
     groupRoute.Get("/", handler.FindAll)
+	groupRoute.Get("/participants", handler.FindAllEventParticipant) // transform #2
     groupRoute.Get("/:id", handler.FindByID)
     groupRoute.Patch("/:id", handler.Update)
     groupRoute.Delete("/:id", handler.Delete)

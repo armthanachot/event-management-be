@@ -48,6 +48,11 @@ func newEventParticipant(db *gorm.DB, opts ...gen.DOOption) eventParticipant {
 				RelationField: field.NewRelation("Event.Organizer.Events", "entity.Event"),
 			},
 		},
+		Participants: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("Event.Participants", "entity.User"),
+		},
 	}
 
 	_eventParticipant.User = eventParticipantBelongsToUser{
@@ -139,6 +144,9 @@ type eventParticipantBelongsToEvent struct {
 		Events struct {
 			field.RelationField
 		}
+	}
+	Participants struct {
+		field.RelationField
 	}
 }
 

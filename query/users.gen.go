@@ -53,6 +53,11 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 				RelationField: field.NewRelation("Events.Organizer.Events", "entity.Event"),
 			},
 		},
+		Participants: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("Events.Participants", "entity.User"),
+		},
 	}
 
 	_user.fillFieldMap()
@@ -148,6 +153,9 @@ type userHasManyEvents struct {
 		Events struct {
 			field.RelationField
 		}
+	}
+	Participants struct {
+		field.RelationField
 	}
 }
 

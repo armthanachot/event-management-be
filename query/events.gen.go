@@ -46,6 +46,9 @@ func newEvent(db *gorm.DB, opts ...gen.DOOption) event {
 			Organizer struct {
 				field.RelationField
 			}
+			Participants struct {
+				field.RelationField
+			}
 		}{
 			RelationField: field.NewRelation("Organizer.Events", "entity.Event"),
 			Organizer: struct {
@@ -53,7 +56,18 @@ func newEvent(db *gorm.DB, opts ...gen.DOOption) event {
 			}{
 				RelationField: field.NewRelation("Organizer.Events.Organizer", "entity.User"),
 			},
+			Participants: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("Organizer.Events.Participants", "entity.User"),
+			},
 		},
+	}
+
+	_event.Participants = eventManyToManyParticipants{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Participants", "entity.User"),
 	}
 
 	_event.fillFieldMap()
@@ -75,6 +89,8 @@ type event struct {
 	IsAvailable field.Bool
 	IsCancelled field.Bool
 	Organizer   eventBelongsToOrganizer
+
+	Participants eventManyToManyParticipants
 
 	fieldMap map[string]field.Expr
 }
@@ -116,7 +132,7 @@ func (e *event) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (e *event) fillFieldMap() {
-	e.fieldMap = make(map[string]field.Expr, 10)
+	e.fieldMap = make(map[string]field.Expr, 11)
 	e.fieldMap["id"] = e.ID
 	e.fieldMap["created_at"] = e.CreatedAt
 	e.fieldMap["updated_at"] = e.UpdatedAt
@@ -133,12 +149,15 @@ func (e event) clone(db *gorm.DB) event {
 	e.eventDo.ReplaceConnPool(db.Statement.ConnPool)
 	e.Organizer.db = db.Session(&gorm.Session{Initialized: true})
 	e.Organizer.db.Statement.ConnPool = db.Statement.ConnPool
+	e.Participants.db = db.Session(&gorm.Session{Initialized: true})
+	e.Participants.db.Statement.ConnPool = db.Statement.ConnPool
 	return e
 }
 
 func (e event) replaceDB(db *gorm.DB) event {
 	e.eventDo.ReplaceDB(db)
 	e.Organizer.db = db.Session(&gorm.Session{})
+	e.Participants.db = db.Session(&gorm.Session{})
 	return e
 }
 
@@ -150,6 +169,9 @@ type eventBelongsToOrganizer struct {
 	Events struct {
 		field.RelationField
 		Organizer struct {
+			field.RelationField
+		}
+		Participants struct {
 			field.RelationField
 		}
 	}
@@ -226,6 +248,87 @@ func (a eventBelongsToOrganizerTx) Count() int64 {
 }
 
 func (a eventBelongsToOrganizerTx) Unscoped() *eventBelongsToOrganizerTx {
+	a.tx = a.tx.Unscoped()
+	return &a
+}
+
+type eventManyToManyParticipants struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a eventManyToManyParticipants) Where(conds ...field.Expr) *eventManyToManyParticipants {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a eventManyToManyParticipants) WithContext(ctx context.Context) *eventManyToManyParticipants {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a eventManyToManyParticipants) Session(session *gorm.Session) *eventManyToManyParticipants {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a eventManyToManyParticipants) Model(m *entity.Event) *eventManyToManyParticipantsTx {
+	return &eventManyToManyParticipantsTx{a.db.Model(m).Association(a.Name())}
+}
+
+func (a eventManyToManyParticipants) Unscoped() *eventManyToManyParticipants {
+	a.db = a.db.Unscoped()
+	return &a
+}
+
+type eventManyToManyParticipantsTx struct{ tx *gorm.Association }
+
+func (a eventManyToManyParticipantsTx) Find() (result []*entity.User, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a eventManyToManyParticipantsTx) Append(values ...*entity.User) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a eventManyToManyParticipantsTx) Replace(values ...*entity.User) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a eventManyToManyParticipantsTx) Delete(values ...*entity.User) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a eventManyToManyParticipantsTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a eventManyToManyParticipantsTx) Count() int64 {
+	return a.tx.Count()
+}
+
+func (a eventManyToManyParticipantsTx) Unscoped() *eventManyToManyParticipantsTx {
 	a.tx = a.tx.Unscoped()
 	return &a
 }

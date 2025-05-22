@@ -14,5 +14,6 @@ type Event struct {
 	IsAvailable bool      `json:"is_available"`
 	IsCancelled bool      `json:"is_cancelled"`
 
-	Organizer *User `json:"organizer" gorm:"foreignKey:OrganizerId"`
+	Organizer    *User   `json:"organizer" gorm:"foreignKey:OrganizerId"`
+	Participants []*User `json:"participants" gorm:"many2many:event_participants;"`
 }

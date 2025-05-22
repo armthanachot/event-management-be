@@ -7,6 +7,7 @@ import (
 	"event-management-system/dto/model"
 	"event-management-system/query"
 
+	"gorm.io/gen/field"
 	"gorm.io/gorm"
 )
 
@@ -55,7 +56,7 @@ func (r *repository) FindAll(criteria model.FindAllUserCriteria) ([]*entity.User
 
 func (r *repository) FindByID(id uint) (*entity.User, error) {
     instance := query.User
-    result, err := instance.Where(instance.ID.Eq(id)).First()
+    result, err := instance.Preload(field.Associations).Where(instance.ID.Eq(id)).First()
     if err != nil {
         return nil, err
     }

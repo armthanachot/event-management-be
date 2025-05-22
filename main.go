@@ -37,7 +37,7 @@ func main() {
 	app.Use(requestid.New())
 
 	db, _ := db.GetDB()
-	// db.Exec("DEALLOCATE ALL")
+	db.Exec("DEALLOCATE ALL")
 	defer func() {
 		dbInstance, _ := db.DB()
 		_ = dbInstance.Close()
