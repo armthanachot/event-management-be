@@ -1,0 +1,1 @@
+go run ./gen/db_migrate.go
