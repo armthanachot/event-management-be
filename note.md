@@ -84,3 +84,23 @@
 - DB transaction (begin, commit, rollback)
 - Update 1 to many (temp table/delete and insert)
 - Give ER Diagram to each team
+
+## note
+```txt
+organizer
+[    {
+        "enventId":1,
+        participantIds:[1,2,3]
+    },
+ {
+        "enventId":2,
+        participantIds:[4,5,6]
+    },
+]
+participant
+    {
+        eventIds:[1,2,3]
+    }
+
+     (update enroll using select * from ... where id not in)
+```
